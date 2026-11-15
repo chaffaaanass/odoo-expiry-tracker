@@ -1,0 +1,29 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: 'DM Mono', monospace;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  --bg:         #f5f7fb;
+  --surface:    #ffffff;
+  --border:     #e5e7eb;
+  --hover:      #f0f2f7;
+
+  --text:       #111827;
+  --muted:      #6b7280;
+
+  --accent:     #7c6af7;
+  --accent-dim: #ede9fe;
+
+  --danger:     #dc2626;
+  --warning:    #d97706;
+  --ok:         #16a34a;
+  --critical:   #dc2626;
+}

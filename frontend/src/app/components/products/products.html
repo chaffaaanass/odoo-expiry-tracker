@@ -1,0 +1,242 @@
+<div class="page">
+  <!-- Header -->
+  <header class="page-header">
+    <div>
+      <h2>Products</h2>
+      <p class="sub">{{ filtered().length }} / {{ products().length }} products</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/odoo" class="btn-outline">Sync from Odoo</a>
+      <button class="btn-primary" (click)="showForm.set(!showForm())">
+        {{ showForm() ? 'Cancel' : '+ Add Product' }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Search -->
+  <div class="search-bar">
+    <input
+      [value]="searchQuery()"
+      (input)="searchQuery.set($any($event.target).value)"
+      placeholder="Search products…"
+      class="search-input"
+    />
+  </div>
+
+  <!-- Add product form -->
+  <div class="form-panel" *ngIf="showForm()">
+    <h3>Add / Update Product</h3>
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <div class="form-grid">
+        <div class="field">
+          <label>Firestore ID *</label>
+          <input formControlName="firestoreId" placeholder="odoo_123" />
+        </div>
+        <div class="field">
+          <label>Odoo ID</label>
+          <input formControlName="odooId" type="number" placeholder="123" />
+        </div>
+        <div class="field">
+          <label>Name *</label>
+          <input formControlName="name" placeholder="Product name" />
+        </div>
+        <div class="field">
+          <label>Code</label>
+          <input formControlName="code" placeholder="SKU-001" />
+        </div>
+        <div class="field">
+          <label>Category</label>
+          <input formControlName="category" placeholder="All / Food" />
+        </div>
+        <div class="field full">
+          <label>Source</label>
+          <input formControlName="source" placeholder="odoo_product / manual" />
+        </div>
+      </div>
+      <div class="api-error" *ngIf="error()">{{ error() }}</div>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : 'Save Product' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-row" *ngIf="loading()">
+    <div class="pulse" *ngFor="let i of [1, 2, 3, 4, 5]"></div>
+  </div>
+
+  <!-- Product cards -->
+  <div class="po-list" *ngIf="!loading()">
+    <div class="po-card" *ngFor="let p of filtered()">
+      <!-- Product header row -->
+      <div class="po-header" (click)="toggleProduct(p.firestoreId)">
+        <div class="po-meta">
+          <span class="po-name">{{ p.name }}</span>
+          <span class="po-supplier mono">{{ p.code ?? '—' }}</span>
+          <span class="badge ok">{{ p.source ?? 'manual' }}</span>
+          <span class="po-date mono" *ngIf="p.category">{{ p.category }}</span>
+        </div>
+        <div class="po-actions">
+          <span class="po-lines-count">Odoo #{{ p.odooId ?? '—' }}</span>
+          <span class="expand-chevron">{{ isExpanded(p.firestoreId) ? '▲' : '▼' }}</span>
+        </div>
+      </div>
+
+      <!-- Expanded: batch management -->
+      <div class="po-lines" *ngIf="isExpanded(p.firestoreId)">
+        <div class="po-line">
+          <!-- Add batch button -->
+          <div class="line-row">
+            <div class="line-product">
+              <span class="line-name">Lots for {{ p.name }}</span>
+            </div>
+            <button
+              class="btn-add-lot"
+              (click)="
+                getBatchForm(p.firestoreId).get('_show')?.value
+                  ? closeBatchForm(p.firestoreId)
+                  : openAddBatchForm(p.firestoreId)
+              "
+            >
+              {{
+                isBatchFormOpen(p.firestoreId) && !isEditingBatch(p.firestoreId)
+                  ? '✕ Annuler'
+                  : '+ Lot'
+              }}
+            </button>
+          </div>
+
+          <!-- Batch form (add or edit) -->
+          <div class="batch-form-panel" *ngIf="isBatchFormOpen(p.firestoreId)">
+            <h4>
+              {{ isEditingBatch(p.firestoreId) ? '✏ Modifier le lot' : '+ Nouveau lot' }}
+              <span class="form-product-name">— {{ p.name }}</span>
+            </h4>
+            <form [formGroup]="getBatchForm(p.firestoreId)" (ngSubmit)="saveBatch(p.firestoreId)">
+              <div class="form-grid-sm">
+                <div
+                  class="field"
+                  [class.field-err-wrap]="batchHasError(p.firestoreId, 'batchNumber')"
+                >
+                  <label>N° de lot *</label>
+                  <input formControlName="batchNumber" placeholder="LOT-2024-001" />
+                  <span class="field-err" *ngIf="batchHasError(p.firestoreId, 'batchNumber')"
+                    >Requis</span
+                  >
+                </div>
+
+                <div
+                  class="field"
+                  [class.field-err-wrap]="batchHasError(p.firestoreId, 'expiryDate')"
+                >
+                  <label>Date d'expiration *</label>
+                  <input formControlName="expiryDate" type="date" />
+                  <span class="field-err" *ngIf="batchHasError(p.firestoreId, 'expiryDate')"
+                    >Requis</span
+                  >
+                </div>
+
+                <div class="field">
+                  <label>Date de livraison</label>
+                  <input formControlName="deliveryDate" type="date" />
+                </div>
+
+                <div
+                  class="field"
+                  [class.field-err-wrap]="batchHasError(p.firestoreId, 'quantity')"
+                >
+                  <label>Quantité *</label>
+                  <input formControlName="quantity" type="number" step="0.001" min="0.001" />
+                  <span class="field-err" *ngIf="batchHasError(p.firestoreId, 'quantity')"
+                    >Requis > 0</span
+                  >
+                </div>
+
+                <div class="field full">
+                  <label>Notes</label>
+                  <textarea formControlName="notes" rows="2" placeholder="Optionnel"></textarea>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button
+                  type="button"
+                  class="btn-outline-sm"
+                  (click)="closeBatchForm(p.firestoreId)"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  class="btn-primary"
+                  [disabled]="savingProductId() === p.firestoreId"
+                >
+                  {{
+                    savingProductId() === p.firestoreId
+                      ? 'Enregistrement…'
+                      : isEditingBatch(p.firestoreId)
+                      ? 'Mettre à jour'
+                      : 'Enregistrer le lot'
+                  }}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Existing batches -->
+          <div
+            class="line-batches"
+            *ngIf="isBatchFormOpen(p.firestoreId) || batchesMap()[p.firestoreId]!.length > 0"
+          >
+            <div class="batches-loading" *ngIf="loadingBatchesId() === p.firestoreId">
+              Chargement des lots…
+            </div>
+
+            <ng-container *ngIf="loadingBatchesId() !== p.firestoreId">
+              <div
+                class="batch-row"
+                *ngFor="let batch of batchesMap()[p.firestoreId]"
+                [class.batch-editing]="editingBatchMap().get(p.firestoreId) === batch.id"
+              >
+                <div class="batch-info">
+                  <span class="batch-num mono">{{ batch.batchNumber }}</span>
+                  <span class="badge" [class]="getExpiryStatus(batch.expiryDate)">
+                    {{ daysUntilExpiry(batch.expiryDate) }}j
+                  </span>
+                  <span class="mono">{{ batch.expiryDate }}</span>
+                  <span class="batch-qty">{{ batch.quantity }}</span>
+                  <span class="batch-notes" *ngIf="batch.notes">{{ batch.notes }}</span>
+                </div>
+
+                <div class="batch-row-actions">
+                  <button class="btn-outline-sm" (click)="openEditBatchForm(p.firestoreId, batch)">
+                    Modifier
+                  </button>
+                  <button
+                    class="btn-danger-sm"
+                    [disabled]="deletingBatchId() === batch.id"
+                    (click)="deleteBatch(p.firestoreId, batch.id)"
+                  >
+                    {{ deletingBatchId() === batch.id ? '…' : 'Supprimer' }}
+                  </button>
+                </div>
+              </div>
+
+              <p
+                class="no-lots"
+                *ngIf="!batchesMap()[p.firestoreId]?.length && isBatchFormOpen(p.firestoreId)"
+              >
+                Aucun lot enregistré pour ce produit.
+              </p>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="empty-state" *ngIf="!loading() && filtered().length === 0">
+    No products yet. Add one above or sync from Odoo.
+  </p>
+</div>

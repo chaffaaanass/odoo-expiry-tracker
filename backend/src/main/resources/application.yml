@@ -1,0 +1,58 @@
+server:
+  port: 8989
+  servlet:
+    session:
+      cookie:
+        secure: false
+        http-only: true
+        path: /
+
+spring:
+  application:
+    name: expiry-tracker
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  datasource:
+    url: jdbc:postgresql://${PG_HOST}:${PG_PORT}/${PG_DATABASE}
+    username: ${PG_USER}
+    password: ${PG_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  # ── Spring Session (stores session in PostgreSQL, replaces SharedPreferences) ─
+  session:
+    store-type: jdbc
+    jdbc:
+      initialize-schema: always  # auto-creates SPRING_SESSION tables on first run
+    timeout: 7d                  # session cookie valid for 7 days (like Android prefs)
+
+  # ── Quartz Scheduler (replaces WorkManager) ─────────────────────────────────
+  quartz:
+    job-store-type: jdbc          # persisted across restarts
+    jdbc:
+      initialize-schema: always
+    properties:
+      org.quartz.threadPool.threadCount: 4
+
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
+  odoo:
+    base-url: ${ODOO_BASE_URL}
+    database: ${ODOO_DATABASE}
+    username: ${ODOO_USERNAME}
+    password: ${ODOO_PASSWORD}
+
+sync:
+  stock:
+    interval-ms: 600000

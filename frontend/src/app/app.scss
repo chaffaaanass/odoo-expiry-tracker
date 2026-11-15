@@ -1,0 +1,114 @@
+* {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+
+  &.no-nav { display: block; }
+}
+
+.sidebar {
+  width: 220px;
+  min-height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: 1.5rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: .95rem;
+  letter-spacing: -.01em;
+  color: var(--text);
+
+  .brand-icon { font-size: 1.25rem; }
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .6rem 1.25rem;
+    font-family: 'DM Mono', monospace;
+    font-size: .8rem;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: .03em;
+    transition: color .15s, background .15s;
+
+    &:hover { color: var(--text); background: var(--hover); }
+    &.active {
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
+      border-right: 2px solid var(--accent);
+    }
+
+    .nav-icon { font-size: 1rem; }
+  }
+}
+
+.sidebar-footer {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: .75rem;
+
+  .user-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: .85rem;
+    color: var(--text);
+  }
+
+  .user-url {
+    font-family: 'DM Mono', monospace;
+    font-size: .65rem;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.btn-logout {
+  width: 100%;
+  padding: .5rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: .75rem;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+
+  &:hover { border-color: var(--danger); color: var(--danger); }
+}
+
+.main-content {
+  flex: 1;
+  overflow: auto;
+}

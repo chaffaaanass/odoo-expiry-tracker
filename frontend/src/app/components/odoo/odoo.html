@@ -1,0 +1,110 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h2>Odoo Integration</h2>
+      <p class="sub">Sync products and purchase orders from Odoo</p>
+    </div>
+  </header>
+
+  <div class="api-error" *ngIf="error()">{{ error() }}</div>
+
+  <!-- Products sync section -->
+  <div class="section-card">
+    <div class="section-header">
+      <div>
+        <h3>Products</h3>
+        <p>Preview Odoo products or sync them into local DB</p>
+      </div>
+      <div class="btn-group">
+        <button class="btn-outline" (click)="loadOdooProducts()" [disabled]="loadingProducts()">
+          {{ loadingProducts() ? 'Loading…' : 'Preview from Odoo' }}
+        </button>
+        <button class="btn-primary" (click)="syncProducts()" [disabled]="syncing()">
+          {{ syncing() ? 'Syncing…' : '⟳ Sync to DB' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="sync-result ok" *ngIf="syncResult()">
+      ✓ Synced {{ syncResult()!.synced }} products to local database
+    </div>
+
+    <div class="table-wrap" *ngIf="odooProducts().length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th>Odoo ID</th>
+            <th>Name</th>
+            <th>Code</th>
+            <th>Category</th>
+            <th>Unit</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of odooProducts()">
+            <td class="mono">{{ p.odooId }}</td>
+            <td>{{ p.name }}</td>
+            <td class="mono">{{ p.code || '—' }}</td>
+            <td>{{ p.category || '—' }}</td>
+            <td>{{ p.unit || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Purchase Orders section -->
+  <div class="section-card">
+    <div class="section-header">
+      <div>
+        <h3>Purchase Orders</h3>
+        <div class="days-filter">
+          Show last
+          <button *ngFor="let d of [7, 15, 30, 60]"
+                  [class.active]="poFilterDays() === d"
+                  (click)="setDays(d)">{{ d }}d</button>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn-outline" (click)="loadPurchaseOrders()" [disabled]="loadingPOs()">
+          {{ loadingPOs() ? 'Loading…' : 'Load POs' }}
+        </button>
+        <button class="btn-primary" (click)="markAllSeen()"
+                [disabled]="purchaseOrders().length === 0">
+          Mark All Seen
+        </button>
+      </div>
+    </div>
+
+    <div class="table-wrap" *ngIf="purchaseOrders().length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th>PO Name</th>
+            <th>Supplier</th>
+            <th>State</th>
+            <th>Approved</th>
+            <th>Lines</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let po of purchaseOrders()">
+            <td class="mono"><strong>{{ po.name }}</strong></td>
+            <td>{{ po.supplierName }}</td>
+            <td><span class="badge ok">{{ po.state }}</span></td>
+            <td class="mono">{{ po.approvedAt ?? '—' }}</td>
+            <td>{{ po.lines.length }}</td>
+            <td>
+              <button class="btn-outline-sm" (click)="markSeen(po.id)">Seen</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="empty-state" *ngIf="purchaseOrders().length === 0 && !loadingPOs()">
+      No unseen purchase orders. Click "Load POs" to fetch.
+    </p>
+  </div>
+</div>

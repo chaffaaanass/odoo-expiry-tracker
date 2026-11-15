@@ -1,0 +1,94 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h2>Batches</h2>
+      <p class="sub">Product: <code>{{ productId() }}</code></p>
+    </div>
+    <button class="btn-primary" (click)="showForm.set(!showForm())">
+      {{ showForm() ? 'Cancel' : '+ Add Batch' }}
+    </button>
+  </header>
+
+  <!-- Form -->
+  <div class="form-panel" *ngIf="showForm()">
+    <h3>New Batch</h3>
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <div class="form-grid">
+        <div class="field">
+          <label>Batch Number *</label>
+          <input formControlName="batchNumber" placeholder="LOT-2024-001" />
+        </div>
+        <div class="field">
+          <label>Expiry Date *</label>
+          <input formControlName="expiryDate" type="date" />
+        </div>
+        <div class="field">
+          <label>Delivery Date</label>
+          <input formControlName="deliveryDate" type="date" />
+        </div>
+        <div class="field">
+          <label>Quantity *</label>
+          <input formControlName="quantity" type="number" step="0.01" />
+        </div>
+        <div class="field">
+          <label>Unit</label>
+          <input formControlName="unit" placeholder="kg / pcs" />
+        </div>
+        <div class="field">
+          <label>Purchase Order ID</label>
+          <input formControlName="purchaseOrderId" placeholder="PO/2024/001" />
+        </div>
+        <div class="field full">
+          <label>Notes</label>
+          <textarea formControlName="notes" rows="2" placeholder="Optional notes"></textarea>
+        </div>
+      </div>
+      <div class="api-error" *ngIf="error()">{{ error() }}</div>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : 'Add Batch' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="loading-row" *ngIf="loading()">
+    <div class="pulse" *ngFor="let i of [1,2,3]"></div>
+  </div>
+
+  <div class="table-wrap" *ngIf="!loading()">
+    <table *ngIf="batches().length > 0">
+      <thead>
+        <tr>
+          <th>Batch #</th>
+          <th>Expiry</th>
+          <th>Days Left</th>
+          <th>Delivery</th>
+          <th>Qty</th>
+          <th>PO</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let b of batches()" [class]="getExpiryStatus(b.expiryDate)">
+          <td class="mono"><strong>{{ b.batchNumber }}</strong></td>
+          <td class="mono">{{ b.expiryDate }}</td>
+          <td class="mono">{{ daysUntilExpiry(b.expiryDate) }}d</td>
+          <td class="mono">{{ b.deliveryDate ?? '—' }}</td>
+          <td>{{ b.quantity }} {{ b.unit ?? '' }}</td>
+          <td class="mono">{{ b.purchaseOrderId ?? '—' }}</td>
+          <td><span class="badge" [class]="getExpiryStatus(b.expiryDate)">{{ getExpiryStatus(b.expiryDate) }}</span></td>
+          <td>
+            <button class="btn-danger-sm"
+                    [disabled]="deletingId() === b.id"
+                    (click)="deleteBatch(b.id)">
+              {{ deletingId() === b.id ? '…' : 'Delete' }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="empty-state" *ngIf="batches().length === 0">No batches for this product yet.</p>
+  </div>
+</div>

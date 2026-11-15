@@ -1,0 +1,121 @@
+<div class="dashboard">
+  <header class="page-header">
+    <div>
+      <h2>Dashboard</h2>
+      <p class="sub">Expiry overview · next 30 days</p>
+    </div>
+    <a routerLink="/products" class="btn-outline">View Products →</a>
+  </header>
+
+  <!-- Stat cards -->
+  <div class="stat-grid" *ngIf="!loading()">
+    <div class="stat-card total">
+      <span class="stat-num">{{ stats().total }}</span>
+      <span class="stat-label">Batches expiring</span>
+    </div>
+    <div class="stat-card critical">
+      <span class="stat-num">{{ stats().critical }}</span>
+      <span class="stat-label">Critical (≤7 days)</span>
+    </div>
+    <div class="stat-card warning">
+      <span class="stat-num">{{ stats().warning }}</span>
+      <span class="stat-label">Warning (≤30 days)</span>
+    </div>
+    <div class="stat-card expired">
+      <span class="stat-num">{{ stats().expired }}</span>
+      <span class="stat-label">Already expired</span>
+    </div>
+    <div class="stat-card depleted">
+      <span class="stat-num">{{ depletedBatches().length }}</span>
+      <span class="stat-label">Stock épuisé</span>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-row" *ngIf="loading()">
+    <div class="pulse"></div><div class="pulse"></div><div class="pulse"></div><div class="pulse"></div>
+  </div>
+
+  <!-- Batch table -->
+  <div class="section" *ngIf="!loading()">
+    <h3>Expiring Batches</h3>
+    <div class="table-wrap">
+      <table *ngIf="expiringBatches().length > 0">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Batch #</th>
+            <th>Expiry</th>
+            <th>Days Left</th>
+            <th>Qty</th>
+            <th>PO</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let b of expiringBatches()">
+            <td><strong>{{ b.productName ?? '—' }}</strong></td>
+            <td class="mono">{{ b.batchNumber }}</td>
+            <td class="mono">{{ b.expiryDate }}</td>
+            <td class="mono">{{ daysUntilExpiry(b.expiryDate) }}</td>
+            <td>{{ b.quantity }}</td>
+            <td class="mono">{{ b.purchaseOrderId ?? '—' }}</td>
+            <td><span class="badge" [class]="getExpiryStatus(b.expiryDate)">{{ getExpiryStatus(b.expiryDate) }}</span></td>
+            @if (getExpiryStatus(b.expiryDate) == 'expired') {
+              <td>
+                <button class="btn-validate"
+                        [class.expired]="getExpiryStatus(b.expiryDate) === 'expired'"
+                        [disabled]="validatingId() === b.id"
+                        (click)="validate(b)">
+                  {{ validatingId() === b.id ? '…' : '✓ Validate' }}
+                </button>
+              </td>
+            }
+            @else {
+              <td></td>
+            }
+            
+          </tr>
+        </tbody>
+      </table>
+      <p class="empty-state" *ngIf="expiringBatches().length === 0">No batches expiring in the next 30 days 🎉</p>
+    </div>
+  </div>
+
+  <div class="section" *ngIf="!loading() && depletedBatches().length > 0">
+    <h3>Produits épuisés</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Batch #</th>
+            <th>Expiry</th>
+            <th>Qty</th>
+            <th>PO</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let b of depletedBatches()" class="depleted">
+            <td><strong>{{ b.productName ?? '—' }}</strong></td>
+            <td class="mono">{{ b.batchNumber }}</td>
+            <td class="mono">{{ b.expiryDate }}</td>
+            <td>0</td>
+            <td class="mono">{{ b.purchaseOrderId ?? '—' }}</td>
+            <td><span class="badge depleted">Épuisé</span></td>
+            <td>
+              <button class="btn-validate depleted"
+                      [disabled]="validatingDepletedId() === b.id"
+                      (click)="validateDepletion(b)">
+                {{ validatingDepletedId() === b.id ? '…' : '✓ Validate' }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
