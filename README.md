@@ -2,7 +2,17 @@
 
 Odoo knows how much stock you have. It does not make it easy to see which lots are about to expire. This app connects to an Odoo instance, lets you record batches with their expiry dates against Odoo products and purchase orders, and shows what expires soon.
 
+[![CI](https://github.com/chaffaaanass/odoo-expiry-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/chaffaaanass/odoo-expiry-tracker/actions/workflows/ci.yml)
+
 `Spring Boot 4` · `Java 17` · `Angular 21` · `PostgreSQL` · `Docker` · `GitHub Actions` · `JUnit / Mockito`
+
+![Dashboard listing batches that are expired, critical or expiring within 30 days](docs/screenshots/dashboard.png)
+
+| Products | Purchase orders |
+|---|---|
+| ![Product list imported from Odoo](docs/screenshots/products.png) | ![Purchase orders read from Odoo](docs/screenshots/purchase-orders.png) |
+
+Screens captured with sample data.
 
 ## What it does
 
